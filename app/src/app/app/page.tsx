@@ -487,7 +487,7 @@ export default function QueuePage() {
         <div className="space-y-3">
 
           {/* Status filter pills + Sort controls */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {/* Status filters */}
             {FILTER_OPTIONS.map((f) => (
               <button
@@ -499,7 +499,7 @@ export default function QueuePage() {
                   )
                 }
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium transition-colors",
                   statusFilter === f.value
                     ? "bg-ink text-white"
                     : "bg-canvas text-body border border-hairline hover:bg-canvas-soft",
@@ -531,7 +531,7 @@ export default function QueuePage() {
                   }
                 }}
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium transition-colors",
                   sortBy === s.value
                     ? "bg-ink text-white"
                     : "bg-canvas text-body border border-hairline hover:bg-canvas-soft",
@@ -556,18 +556,18 @@ export default function QueuePage() {
 
       {/* ═══ Stats Row ════════════════════════════════════════════════════ */}
       <section aria-label="Queue statistics">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
           {statCards.map((s) => (
             <div
               key={s.label}
-              className="rounded-lg border border-hairline bg-canvas p-5 shadow-level-2"
+              className="rounded-lg border border-hairline bg-canvas p-3 shadow-level-2 sm:p-5"
             >
-              <p className="font-mono text-xs font-medium uppercase tracking-wider text-mute">
+              <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-mute sm:text-xs">
                 {s.label}
               </p>
-              <p className={cn("mt-1.5 text-3xl font-semibold tracking-tight tabular-nums", s.color)}>
+              <p className={cn("mt-1 text-xl font-semibold tracking-tight tabular-nums sm:text-3xl", s.color)}>
                 {isLoadingQueue ? (
-                  <Loader2 className="size-5 animate-spin" />
+                  <Loader2 className="size-4 animate-spin sm:size-5" />
                 ) : (
                   s.value
                 )}
@@ -579,8 +579,8 @@ export default function QueuePage() {
 
       {/* ═══ Daily Summary ════════════════════════════════════════════════ */}
       <section aria-label="Today's summary">
-        <div className="rounded-lg border border-hairline bg-canvas p-5 shadow-level-1">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+        <div className="rounded-lg border border-hairline bg-canvas p-4 shadow-level-1 sm:p-5">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-4">
             <div>
               <p className="font-mono text-xs font-medium uppercase tracking-wider text-mute">
                 Served Today
@@ -621,9 +621,9 @@ export default function QueuePage() {
 
       {/* ═══ Controls Toolbar ═════════════════════════════════════════════ */}
       <section aria-label="Queue controls">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* OPD Status Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-canvas px-4 py-1.5 shadow-level-1">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-canvas px-3 py-1.5 shadow-level-1 sm:px-4 sm:gap-2">
             <div
               className={cn(
                 "size-2 rounded-full",
@@ -663,7 +663,7 @@ export default function QueuePage() {
           {/* Call Next */}
           {permissions.canCallPatient && (
             <Button
-              className="rounded-full bg-ink text-white hover:bg-ink/90 px-5 h-9 text-sm font-medium"
+              className="rounded-full bg-ink text-white hover:bg-ink/90 px-3 sm:px-5 h-8 sm:h-9 text-xs sm:text-sm font-medium"
               onClick={handleCallNext}
               disabled={!nextWaiting || !!actionLoadingId}
               aria-label={
@@ -673,14 +673,19 @@ export default function QueuePage() {
               }
             >
               {actionLoadingId === "call-next" ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="size-3.5 animate-spin sm:size-4" aria-hidden="true" />
               ) : (
-                <ArrowRight className="size-4" aria-hidden="true" />
+                <ArrowRight className="size-3.5 sm:size-4" aria-hidden="true" />
               )}
-              <span>
+              <span className="hidden sm:inline">
                 {nextWaiting
                   ? `Call Next (#${nextWaiting.token_number})`
                   : "No Waiting Patients"}
+              </span>
+              <span className="sm:hidden">
+                {nextWaiting
+                  ? `#${nextWaiting.token_number}`
+                  : "—"}
               </span>
             </Button>
           )}
@@ -701,14 +706,15 @@ export default function QueuePage() {
               render={
                 <Button
                   variant="outline"
-                  className="rounded-full border-hairline h-9 px-4 text-sm"
+                  className="rounded-full border-hairline h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
                   disabled={!isOpdOpen}
                   aria-label="Add new patient"
                 />
               }
             >
-              <Plus className="size-4 mr-1.5" aria-hidden="true" />
-              <span>Add Patient</span>
+              <Plus className="size-3.5 sm:size-4 mr-1" aria-hidden="true" />
+              <span className="hidden sm:inline">Add Patient</span>
+              <span className="sm:hidden">Add</span>
             </DialogTrigger>
 
             <DialogContent className="rounded-xl border border-hairline bg-canvas p-6 shadow-level-5">
@@ -803,21 +809,23 @@ export default function QueuePage() {
           {/* Display QR */}
           <Button
             variant="outline"
-            className="rounded-full border-hairline h-9 px-4 text-sm"
+            className="rounded-full border-hairline h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
             onClick={() => setShowQrDialog(true)}
           >
-            <QrCode className="size-4 mr-1.5" />
-            Display QR
+            <QrCode className="size-3.5 sm:size-4 mr-1" />
+            <span className="hidden sm:inline">Display QR</span>
+            <span className="sm:hidden">QR</span>
           </Button>
 
           {/* Pair Display */}
           <Button
             variant="outline"
-            className="rounded-full border-hairline h-9 px-4 text-sm"
+            className="rounded-full border-hairline h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
             onClick={() => setShowPairDialog(true)}
           >
-            <Monitor className="size-4 mr-1.5" />
-            Pair Display
+            <Monitor className="size-3.5 sm:size-4 mr-1" />
+            <span className="hidden sm:inline">Pair Display</span>
+            <span className="sm:hidden">Pair</span>
           </Button>
         </div>
       </section>
@@ -853,8 +861,8 @@ export default function QueuePage() {
         {queue.length > 0 && (
           <>
             {displayedEntries.length > 0 ? (
-              <div className="overflow-hidden rounded-lg border border-hairline bg-canvas shadow-level-2">
-                <table className="w-full">
+              <div className="overflow-x-auto rounded-lg border border-hairline bg-canvas shadow-level-2">
+                <table className="w-full min-w-[500px] sm:min-w-0">
                   <thead>
                     <tr className="border-b border-hairline bg-canvas-soft">
                       <th className="font-mono text-xs font-medium uppercase tracking-wider text-mute px-4 py-2.5 text-left">

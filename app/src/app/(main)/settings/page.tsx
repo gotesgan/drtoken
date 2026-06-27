@@ -84,8 +84,8 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-hairline bg-canvas p-6 shadow-level-1">
-      <div className="mb-5 flex items-center gap-2.5">
+    <div className="rounded-lg border border-hairline bg-canvas p-4 shadow-level-1 sm:p-6">
+      <div className="mb-4 flex items-center gap-2.5 sm:mb-5">
         <div className="flex size-8 items-center justify-center rounded-lg bg-canvas-soft">
           <Icon className="size-4 text-ink" aria-hidden="true" />
         </div>
@@ -331,12 +331,12 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
             return (
               <div
                 key={u.id}
-                className="rounded-lg border border-hairline bg-canvas-soft/50 px-4 py-3"
+                className="rounded-lg border border-hairline bg-canvas-soft/50 px-3 py-3 sm:px-4"
               >
                 {/* Top row: name + role badge */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-ink truncate">
+                    <p className="text-sm font-medium text-ink break-words">
                       {u.display_name || u.email || "Unknown"}
                       {isSelf && (
                         <span className="ml-2 text-[10px] text-mute font-normal">
@@ -345,7 +345,7 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
                       )}
                     </p>
                     {u.email && (
-                      <p className="text-xs text-body truncate">{u.email}</p>
+                      <p className="text-xs text-body break-all">{u.email}</p>
                     )}
                   </div>
                   <span
@@ -357,7 +357,7 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
 
                 {/* Permission toggles */}
                 {!isSelf && (
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2">
                     {PERMISSION_DEFS.map((perm) => {
                       const effectiveValue = getEffectivePermission(u, perm.dbKey);
                       const isCustom = u[perm.dbKey] !== null;
@@ -416,7 +416,7 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
         <p className="mt-0.5 text-xs text-body">Create an account and assign permissions.</p>
 
         <div className="mt-3 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
               <input type="text" value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)}
@@ -442,7 +442,7 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
           {/* Permission toggles */}
           <div>
             <p className="text-xs font-medium text-gray-700 mb-2">Permissions</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               {PERMISSION_DEFS.map((p) => (
                 <label key={p.dbKey} className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={newStaffPerms[p.dbKey] ?? false}
@@ -547,18 +547,23 @@ function DevicesSection({ selectedClinicId }: { selectedClinicId: string }) {
           {sessions.map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between rounded-lg border border-hairline bg-canvas-soft/50 px-4 py-3"
+              className="flex items-start justify-between gap-3 rounded-lg border border-hairline bg-canvas-soft/50 px-3 py-3 sm:px-4"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-ink">
-                  Display — Code: {s.pairing_code}
+                <p className="text-sm font-medium text-ink break-words">
+                  Display — {s.pairing_code}
                 </p>
-                <p className="text-xs text-body">
-                  {s.status === "paired" ? "Paired" : s.status}
-                  {s.paired_by ? ` by ${s.paired_by}` : ""}
-                  {" · "}
-                  {formatDate(s.last_seen_at)}
-                </p>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-body">
+                  <span className={s.status === "paired" ? "text-emerald-600 font-medium" : ""}>
+                    {s.status === "paired" ? "● Paired" : s.status}
+                  </span>
+                  {s.last_seen_at && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>Last seen: {formatDate(s.last_seen_at)}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -782,10 +787,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink">Settings</h1>
-        <p className="mt-1 text-sm text-body">
+        <h1 className="text-lg font-semibold text-ink sm:text-xl">Settings</h1>
+        <p className="mt-0.5 text-xs text-body sm:text-sm">
           Manage your account and clinic configuration
         </p>
       </div>
