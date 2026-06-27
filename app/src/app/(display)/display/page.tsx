@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, WifiOff, RefreshCw } from "lucide-react";
+import { Loader2, WifiOff, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -54,11 +54,32 @@ export default function DisplayPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   // Queue state (paired mode)
   const [servingEntry, setServingEntry] = useState<QueueEntry | null>(null);
   const [waitingQueue, setWaitingQueue] = useState<QueueEntry[]>([]);
 
   // Refs
+  const displayRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      displayRef.current?.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFSChange);
+    return () => document.removeEventListener("fullscreenchange", onFSChange);
+  }, []);
+
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
     null,
@@ -436,16 +457,25 @@ export default function DisplayPage() {
   const totalWaiting = waitingQueue.length;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-canvas-soft">
+    <div ref={displayRef} className="flex min-h-dvh flex-col bg-canvas-soft">
       {/* ── Top Bar ──────────────────────────────────────────────────── */}
       <header className="flex items-center justify-between border-b border-hairline bg-canvas px-6 py-4">
         <h1 className="text-lg font-semibold text-ink">{clinicName}</h1>
-        <time
-          className="font-mono text-sm tabular-nums text-body"
-          dateTime={currentTime.toISOString()}
-        >
-          {formatTime(currentTime)}
-        </time>
+        <div className="flex items-center gap-3">
+          <time
+            className="font-mono text-sm tabular-nums text-body"
+            dateTime={currentTime.toISOString()}
+          >
+            {formatTime(currentTime)}
+          </time>
+          <button
+            onClick={toggleFullscreen}
+            className="rounded-lg p-2 text-body transition-colors hover:bg-hairline hover:text-ink"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </button>
+        </div>
       </header>
 
       {/* ── Center Hero ──────────────────────────────────────────────── */}
