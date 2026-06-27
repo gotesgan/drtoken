@@ -314,3 +314,29 @@
     @apply font-sans font-mono;
   }
 }
+
+/* ── Print styles ──────────────────────────────────────────────────────── */
+@media print {
+  body * {
+    display: none !important;
+  }
+  body,
+  #qr-print-area,
+  #qr-print-area * {
+    display: block !important;
+  }
+  #qr-print-area {
+    position: fixed;
+    inset: 0;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: white;
+  }
+  #qr-print-area input,
+  #qr-print-area button {
+    display: none !important;
+  }
+}

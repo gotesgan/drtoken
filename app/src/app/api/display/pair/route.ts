@@ -3,29 +3,50 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const { pairing_code, clinic_id, paired_by } = await request.json();
+    const { pairing_code, clinic_id, session_id, paired_by } = await request.json();
 
-    if (!pairing_code || !clinic_id) {
-      return NextResponse.json(
-        { error: "pairing_code and clinic_id are required" },
-        { status: 400 },
-      );
-    }
+    // Support pairing by session_id (QR code scan) or pairing_code + clinic_id (manual entry)
+    let session;
 
-    // Find the unpaired session
-    const { data: session, error: findError } = await supabase
-      .from("display_sessions")
-      .select("*")
-      .eq("pairing_code", pairing_code)
-      .eq("status", "unpaired")
-      .maybeSingle();
+    if (session_id) {
+      const { data, error } = await supabase
+        .from("display_sessions")
+        .select("*")
+        .eq("id", session_id)
+        .eq("status", "unpaired")
+        .maybeSingle();
 
-    if (findError) throw findError;
-    if (!session) {
-      return NextResponse.json(
-        { error: "Invalid pairing code" },
-        { status: 404 },
-      );
+      if (error) throw error;
+      if (!data) {
+        return NextResponse.json(
+          { error: "Invalid or already paired session" },
+          { status: 404 },
+        );
+      }
+      session = data;
+    } else {
+      if (!pairing_code || !clinic_id) {
+        return NextResponse.json(
+          { error: "pairing_code and clinic_id are required" },
+          { status: 400 },
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("display_sessions")
+        .select("*")
+        .eq("pairing_code", pairing_code)
+        .eq("status", "unpaired")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        return NextResponse.json(
+          { error: "Invalid pairing code" },
+          { status: 404 },
+        );
+      }
+      session = data;
     }
 
     // Check expiry
@@ -41,14 +62,16 @@ export async function POST(request: Request) {
     }
 
     // Pair the display
+    const updateData: Record<string, unknown> = {
+      status: "paired",
+      paired_by: paired_by ?? null,
+      paired_at: new Date().toISOString(),
+    };
+    if (clinic_id) updateData.clinic_id = clinic_id;
+
     const { data, error: updateError } = await supabase
       .from("display_sessions")
-      .update({
-        clinic_id,
-        status: "paired",
-        paired_by: paired_by ?? null,
-        paired_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", session.id)
       .select("id, clinic_id, status")
       .single();

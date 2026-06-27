@@ -45,6 +45,7 @@ import {
   Copy,
   Search,
   Monitor,
+  Printer,
 } from "lucide-react";
 import { PairDisplayDialog } from "@/components/pair-display-dialog";
 
@@ -367,6 +368,10 @@ export default function QueuePage() {
       // Clipboard not available — silently fail
     }
   }, [qrUrl]);
+
+  const handlePrintQr = useCallback(() => {
+    window.print();
+  }, []);
 
   // ── Filtered + sorted queue ──────────────────────────────────────────
 
@@ -1024,7 +1029,7 @@ export default function QueuePage() {
           </DialogHeader>
 
           <DialogPanel>
-            <div className="flex flex-col items-center gap-4">
+            <div id="qr-print-area" className="flex flex-col items-center gap-4">
               {/* QR Code Image */}
               <div className="overflow-hidden rounded-lg border border-hairline bg-white p-2 shadow-level-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1037,7 +1042,7 @@ export default function QueuePage() {
                 />
               </div>
 
-              {/* URL Display + Copy */}
+              {/* URL Display + Copy + Print */}
               <div className="flex w-full items-center gap-2">
                 <input
                   readOnly
@@ -1062,6 +1067,15 @@ export default function QueuePage() {
                       Copy
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrintQr}
+                  className="shrink-0"
+                >
+                  <Printer className="size-3.5 mr-1" />
+                  Print
                 </Button>
               </div>
             </div>
