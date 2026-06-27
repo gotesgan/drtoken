@@ -21,3 +21,24 @@ export async function createSupabaseServerClient() {
     },
   );
 }
+
+/**
+ * Get the currently authenticated user's profile (including clinic name).
+ * Returns null if no user is logged in.
+ */
+export async function getCurrentProfile() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("*, clinics(name)")
+    .eq("id", user.id)
+    .single();
+
+  return data;
+}

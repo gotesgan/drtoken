@@ -3,6 +3,7 @@
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import type React from "react";
 import { cn } from "@/lib/utils";
+import { Button, type ButtonProps } from "@/components/ui/button";
 
 export const AlertDialogCreateHandle: typeof AlertDialogPrimitive.createHandle =
   AlertDialogPrimitive.createHandle;
@@ -157,6 +158,47 @@ export function AlertDialogClose(
 ): React.ReactElement {
   return (
     <AlertDialogPrimitive.Close data-slot="alert-dialog-close" {...props} />
+  );
+}
+
+export function AlertDialogPanel({
+  className,
+  ...props
+}: React.ComponentProps<"div">): React.ReactElement {
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse gap-2 px-6 pb-6 sm:flex-row sm:justify-end",
+        className,
+      )}
+      data-slot="alert-dialog-panel"
+      {...props}
+    />
+  );
+}
+
+export function AlertDialogCancel(
+  props: AlertDialogPrimitive.Close.Props,
+): React.ReactElement {
+  return (
+    <AlertDialogPrimitive.Close
+      data-slot="alert-dialog-cancel"
+      render={<Button variant="outline" />}
+      {...props}
+    />
+  );
+}
+
+export function AlertDialogAction({
+  variant = "default",
+  ...props
+}: ButtonProps): React.ReactElement {
+  return (
+    <Button
+      data-slot="alert-dialog-action"
+      variant={variant}
+      {...props}
+    />
   );
 }
 

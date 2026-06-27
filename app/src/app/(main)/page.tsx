@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, type FormEvent } from "react";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,10 +13,24 @@ import {
   DialogPanel,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogPanel,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useSearch } from "@/lib/search-context";
+import { useClinic } from "@/lib/clinic-context";
+import { useSession } from "@/lib/session-context";
+import { mergePermissions } from "@/lib/permissions";
 import {
   Loader2,
   Plus,
@@ -36,20 +44,11 @@ import {
   QrCode,
   Copy,
   Search,
-  Bell,
+  Monitor,
 } from "lucide-react";
+import { PairDisplayDialog } from "@/components/pair-display-dialog";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
-
-interface Clinic {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  is_active: boolean;
-  is_opd_open: boolean;
-  created_at: string;
-}
 
 interface QueueEntry {
   id: string;
@@ -95,31 +94,6 @@ const STATUS_BADGE_CLASS: Record<QueueEntry["status"], string> = {
     "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
-/* ── Clinic avatar helpers ─────────────────────────────────────────── */
-
-const CLINIC_COLORS = [
-  "bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500",
-  "bg-rose-500", "bg-cyan-500", "bg-orange-500", "bg-pink-500",
-];
-
-function getClinicInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) {
-    const w = parts[0];
-    return w.length >= 2 ? w.slice(0, 2).toUpperCase() : w[0].toUpperCase();
-  }
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-function getClinicColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return CLINIC_COLORS[Math.abs(hash) % CLINIC_COLORS.length];
-}
-
 const FILTER_OPTIONS: { label: string; value: string | null }[] = [
   { label: "All", value: null },
   { label: "Waiting", value: "waiting" },
@@ -150,12 +124,11 @@ function formatTime(dateString: string | null): string {
 export default function QueuePage() {
   /* ── State ──────────────────────────────────────────────────────────── */
 
-  const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [selectedClinicId, setSelectedClinicId] = useState<string>("");
+  const { clinics, selectedClinicId } = useClinic();
+  const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [stats, setStats] = useState<QueueStats | null>(null);
   const [isOpdOpen, setIsOpdOpen] = useState(false);
-  const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [isLoadingQueue, setIsLoadingQueue] = useState(false);
   const [isTogglingOpd, setIsTogglingOpd] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -172,47 +145,23 @@ export default function QueuePage() {
   const [showQrDialog, setShowQrDialog] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Search, filter, sort
-  const [searchQuery, setSearchQuery] = useState("");
+  // Pair display dialog
+  const [showPairDialog, setShowPairDialog] = useState(false);
+  const [skipConfirm, setSkipConfirm] = useState<{ id: string; token: number; name: string } | null>(null);
+  const [opdCloseConfirm, setOpdCloseConfirm] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"token" | "time" | "name">("time");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showAll, setShowAll] = useState(false);
+  const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
+  const { user } = useSession();
+  const permissions = useMemo(
+    () => mergePermissions(user?.role ?? "admin", user?.permissions),
+    [user],
+  );
 
   /* ── Data fetching ──────────────────────────────────────────────────── */
-
-  // Load clinics once on mount
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setIsLoadingClinics(true);
-        const res = await fetch("/api/clinics");
-        if (!res.ok) throw new Error("Failed to load clinics");
-        const data: Clinic[] = await res.json();
-        if (cancelled) return;
-        setClinics(data);
-        if (data.length > 0) {
-          setSelectedClinicId(data[0].id);
-          setIsOpdOpen(data[0].is_opd_open);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setPageError(
-            err instanceof Error ? err.message : "Failed to load clinics",
-          );
-        }
-      } finally {
-        if (!cancelled) setIsLoadingClinics(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Fetch queue for the selected clinic
   const fetchQueue = useCallback(async () => {
@@ -262,20 +211,19 @@ export default function QueuePage() {
     };
   }, [selectedClinicId, fetchQueue]);
 
-  // Keep OPD state in sync with the selected clinic
-  const handleClinicChange = useCallback(
-    (value: string | null) => {
-      if (!value) return;
-      setSelectedClinicId(value);
-      const clinic = clinics.find((c) => c.id === value);
-      if (clinic) setIsOpdOpen(clinic.is_opd_open);
-      // Reset search, filter, and show-all when switching clinics
+  // Sync OPD + reset filters when selected clinic changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (selectedClinic) {
+        setIsOpdOpen(selectedClinic.is_opd_open);
+      }
       setSearchQuery("");
       setStatusFilter(null);
       setShowAll(false);
-    },
-    [clinics],
-  );
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClinic?.id]);
 
   /* ── Actions ────────────────────────────────────────────────────────── */
 
@@ -358,9 +306,9 @@ export default function QueuePage() {
     [fetchQueue],
   );
 
-  /* ── Derived values ─────────────────────────────────────────────────── */
+  // Confirmation handlers are defined inline in the AlertDialog JSX below
 
-  const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
+  /* ── Derived values ─────────────────────────────────────────────────── */
 
   const nextWaiting =
     queue
@@ -406,10 +354,9 @@ export default function QueuePage() {
 
   const waitingCount = queue.filter((e) => e.status === "waiting").length;
 
-  const qrUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/track`
-      : "";
+  const qrUrl = (typeof window !== "undefined" && selectedClinicId)
+    ? window.location.origin + "/token?clinic_id=" + selectedClinicId
+    : "";
 
   const handleCopyUrl = useCallback(async () => {
     try {
@@ -463,16 +410,6 @@ export default function QueuePage() {
     [filteredQueue, showAll, hasActiveFilter],
   );
 
-  /* ── Loading state (no clinics yet) ─────────────────────────────────── */
-
-  if (isLoadingClinics) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <Loader2 className="size-5 animate-spin text-mute" />
-      </div>
-    );
-  }
-
   /* ── Empty state (no clinics in the system) ─────────────────────────── */
 
   if (clinics.length === 0) {
@@ -495,17 +432,46 @@ export default function QueuePage() {
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      {/* Error banner */}
+      {/* Email verification banner */}
+      {user && !user.emailConfirmed && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <svg className="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <span className="flex-1">
+            Please verify your email address. Check your inbox for a confirmation link.
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { error } = await supabase.auth.resend({
+                  type: "signup",
+                  email: user.email!,
+                });
+                if (error) setPageError(error.message);
+              } catch {
+                setPageError("Failed to resend verification email");
+              }
+            }}
+            className="shrink-0 font-medium text-amber-700 hover:text-amber-800 underline-offset-2 hover:underline"
+          >
+            Resend
+          </button>
+        </div>
+      )}
+
+      {/* Error banner (Polaris-style) */}
       {pageError && (
         <div
-          className="flex items-center gap-2 rounded-lg border border-destructive/32 bg-destructive/8 px-4 py-3 text-sm text-destructive-foreground"
+          className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
           role="alert"
         >
-          <X className="size-4 shrink-0" aria-hidden="true" />
+          <X className="size-4 shrink-0 text-red-400" aria-hidden="true" />
           <span className="flex-1">{pageError}</span>
           <button
             type="button"
-            className="shrink-0 rounded p-0.5 hover:bg-destructive/16"
+            className="shrink-0 rounded p-0.5 text-red-400 hover:text-red-600 hover:bg-red-100 transition-colors"
             onClick={() => setPageError(null)}
             aria-label="Dismiss error"
           >
@@ -514,68 +480,7 @@ export default function QueuePage() {
         </div>
       )}
 
-      {/* ═══ Top Bar: Search | Bell | Clinic Selector ════════════════════ */}
-      <div className="flex items-center gap-3">
-        {/* Search bar (center, fills space) */}
-        <div className="relative flex-1 max-w-lg">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute"
-            aria-hidden="true"
-          />
-          <Input
-            placeholder="Search by patient name, phone, or token number..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-hairline h-9 pl-9 pr-3 text-sm"
-            aria-label="Search patients"
-          />
-        </div>
 
-        {/* Notification bell */}
-        <button
-          type="button"
-          className="flex size-9 items-center justify-center rounded-lg border border-hairline bg-canvas text-body hover:text-ink hover:bg-canvas-soft transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell className="size-4" />
-        </button>
-
-        {/* Clinic selector with avatar (right) */}
-        <Select
-          value={selectedClinicId}
-          onValueChange={handleClinicChange}
-        >
-          <SelectTrigger
-            className="flex items-center gap-2 w-auto min-w-0 h-auto border-0 bg-transparent p-0 text-sm text-ink font-medium shadow-none hover:opacity-70 transition-opacity cursor-pointer [&_[data-slot=select-icon]]:hidden"
-            aria-label="Select clinic"
-          >
-            {selectedClinic && (
-              <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${getClinicColor(selectedClinic.name)}`}
-              >
-                {getClinicInitials(selectedClinic.name)}
-              </span>
-            )}
-            <SelectValue>
-              {selectedClinic?.name ?? "Select clinic…"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent side="bottom" sideOffset={4}>
-            {clinics.map((clinic) => (
-              <SelectItem key={clinic.id} value={clinic.id}>
-                <span className="flex items-center gap-2">
-                  <span
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white ${getClinicColor(clinic.name)}`}
-                  >
-                    {getClinicInitials(clinic.name)}
-                  </span>
-                  {clinic.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* ═══ Filters ═════════════════════════════════════════════════════ */}
       <section aria-label="Filter and sort queue">
@@ -734,41 +639,51 @@ export default function QueuePage() {
             >
               {isOpdOpen ? "Open" : "Closed"}
             </span>
-            <button
-              type="button"
-              onClick={toggleOpd}
-              disabled={isTogglingOpd}
-              className="ml-1 text-xs text-body underline-offset-2 hover:text-ink hover:underline"
-            >
-              Toggle
-            </button>
+            {permissions.canToggleOpd && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isOpdOpen) {
+                    setOpdCloseConfirm(true);
+                  } else {
+                    toggleOpd();
+                  }
+                }}
+                disabled={isTogglingOpd}
+                className="ml-1 text-xs text-body underline-offset-2 hover:text-ink hover:underline"
+              >
+                Toggle
+              </button>
+            )}
           </div>
 
           {/* Spacer on larger screens */}
           <div className="hidden flex-1 sm:block" />
 
           {/* Call Next */}
-          <Button
-            className="rounded-full bg-ink text-white hover:bg-ink/90 px-5 h-9 text-sm font-medium"
-            onClick={handleCallNext}
-            disabled={!nextWaiting || !!actionLoadingId}
-            aria-label={
-              nextWaiting
-                ? `Call next patient (Token #${nextWaiting.token_number})`
-                : "No waiting patients"
-            }
-          >
-            {actionLoadingId === "call-next" ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <ArrowRight className="size-4" aria-hidden="true" />
-            )}
-            <span>
-              {nextWaiting
-                ? `Call Next (#${nextWaiting.token_number})`
-                : "No Waiting Patients"}
-            </span>
-          </Button>
+          {permissions.canCallPatient && (
+            <Button
+              className="rounded-full bg-ink text-white hover:bg-ink/90 px-5 h-9 text-sm font-medium"
+              onClick={handleCallNext}
+              disabled={!nextWaiting || !!actionLoadingId}
+              aria-label={
+                nextWaiting
+                  ? `Call next patient (Token #${nextWaiting.token_number})`
+                  : "No waiting patients"
+              }
+            >
+              {actionLoadingId === "call-next" ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ArrowRight className="size-4" aria-hidden="true" />
+              )}
+              <span>
+                {nextWaiting
+                  ? `Call Next (#${nextWaiting.token_number})`
+                  : "No Waiting Patients"}
+              </span>
+            </Button>
+          )}
 
           {/* Add Patient */}
           <Dialog
@@ -844,10 +759,10 @@ export default function QueuePage() {
 
                     {addError && (
                       <p
-                        className="flex items-center gap-1.5 text-sm text-destructive-foreground"
+                        className="flex items-center gap-1.5 text-sm text-red-600"
                         role="alert"
                       >
-                        <X className="size-3.5" aria-hidden="true" />
+                        <X className="size-3.5 shrink-0" aria-hidden="true" />
                         {addError}
                       </p>
                     )}
@@ -893,6 +808,16 @@ export default function QueuePage() {
           >
             <QrCode className="size-4 mr-1.5" />
             Display QR
+          </Button>
+
+          {/* Pair Display */}
+          <Button
+            variant="outline"
+            className="rounded-full border-hairline h-9 px-4 text-sm"
+            onClick={() => setShowPairDialog(true)}
+          >
+            <Monitor className="size-4 mr-1.5" />
+            Pair Display
           </Button>
         </div>
       </section>
@@ -986,40 +911,48 @@ export default function QueuePage() {
                             <div className="flex items-center justify-end gap-1">
                               {entry.status === "waiting" && (
                                 <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      updatePatientStatus(entry.id, "serving")
-                                    }
-                                    disabled={isActionLoading}
-                                    aria-label={`Call token #${entry.token_number}`}
-                                  >
-                                    {isActionLoading ? (
-                                      <Loader2 className="size-3.5 animate-spin" />
-                                    ) : (
-                                      <ArrowRight className="size-3.5" />
-                                    )}
-                                    <span className="hidden sm:inline">Call</span>
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      updatePatientStatus(entry.id, "skipped")
-                                    }
-                                    disabled={isActionLoading}
-                                    aria-label={`Skip token #${entry.token_number}`}
-                                  >
-                                    {isActionLoading ? (
-                                      <Loader2 className="size-3.5 animate-spin" />
-                                    ) : (
-                                      <SkipForward className="size-3.5" />
-                                    )}
-                                  </Button>
+                                  {permissions.canCallPatient && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        updatePatientStatus(entry.id, "serving")
+                                      }
+                                      disabled={isActionLoading}
+                                      aria-label={`Call token #${entry.token_number}`}
+                                    >
+                                      {isActionLoading ? (
+                                        <Loader2 className="size-3.5 animate-spin" />
+                                      ) : (
+                                        <ArrowRight className="size-3.5" />
+                                      )}
+                                      <span className="hidden sm:inline">Call</span>
+                                    </Button>
+                                  )}
+                                  {permissions.canSkipPatient && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        setSkipConfirm({
+                                          id: entry.id,
+                                          token: entry.token_number,
+                                          name: entry.patient_name,
+                                        })
+                                      }
+                                      disabled={isActionLoading}
+                                      aria-label={`Skip token #${entry.token_number}`}
+                                    >
+                                      {isActionLoading ? (
+                                        <Loader2 className="size-3.5 animate-spin" />
+                                      ) : (
+                                        <SkipForward className="size-3.5" />
+                                      )}
+                                    </Button>
+                                  )}
                                 </>
                               )}
-                              {entry.status === "serving" && (
+                              {entry.status === "serving" && permissions.canCompletePatient && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1083,10 +1016,10 @@ export default function QueuePage() {
         <DialogContent className="rounded-xl border border-hairline bg-canvas p-6 shadow-level-5">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-ink">
-              Patient Queue QR Code
+              Patient Token Lookup QR Code
             </DialogTitle>
             <DialogDescription className="text-sm text-body">
-              Scan to join the queue
+              Scan to check your token on your phone
             </DialogDescription>
           </DialogHeader>
 
@@ -1145,6 +1078,72 @@ export default function QueuePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ═══ Pair Display Dialog ════════════════════════════════════════ */}
+      <PairDisplayDialog
+        open={showPairDialog}
+        onOpenChange={setShowPairDialog}
+        defaultClinicId={selectedClinicId}
+      />
+
+      {/* ═══ Skip Patient Confirmation ════════════════════════════════════ */}
+      <AlertDialog
+        open={!!skipConfirm}
+        onOpenChange={(open) => !open && setSkipConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Skip Patient</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to skip Token #{skipConfirm?.token} (
+              {skipConfirm?.name})? This will move them to the skipped list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogPanel className="flex justify-end gap-2">
+            <AlertDialogCancel onClick={() => setSkipConfirm(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (skipConfirm) {
+                  updatePatientStatus(skipConfirm.id, "skipped");
+                }
+                setSkipConfirm(null);
+              }}
+            >
+              Skip Patient
+            </AlertDialogAction>
+          </AlertDialogPanel>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ═══ Close OPD Confirmation ══════════════════════════════════════ */}
+      <AlertDialog open={opdCloseConfirm} onOpenChange={setOpdCloseConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close OPD</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to close OPD? New patients will not be
+              able to join the queue. Existing patients will still be served.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogPanel className="flex justify-end gap-2">
+            <AlertDialogCancel onClick={() => setOpdCloseConfirm(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                setOpdCloseConfirm(false);
+                toggleOpd();
+              }}
+            >
+              Close OPD
+            </AlertDialogAction>
+          </AlertDialogPanel>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

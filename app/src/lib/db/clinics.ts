@@ -7,6 +7,7 @@ export type Clinic = {
   phone: string | null;
   is_active: boolean;
   is_opd_open: boolean;
+  opd_mode: "open_dr_in" | "open_dr_out" | "closed";
   created_at: string;
 };
 
