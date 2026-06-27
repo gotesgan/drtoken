@@ -7,12 +7,13 @@ export async function middleware(request: NextRequest) {
   // ── Public routes — no auth needed ────────────────────────────────
   const publicPaths = ["/login", "/register", "/auth/callback", "/forgot-password", "/reset-password"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
+  const isLanding = pathname === "/";
   const isKiosk = pathname.startsWith("/token") || pathname.startsWith("/track");
   const isApi = pathname.startsWith("/api");
 
   const isStaticFile = /\.(png|jpg|jpeg|gif|svg|ico|webp|css|js|woff2?)$/i.test(pathname);
   const isE2ETest = request.cookies.get("e2e_test")?.value === "1";
-  if (isPublic || isKiosk || isApi || isE2ETest || isStaticFile) {
+  if (isPublic || isLanding || isKiosk || isApi || isE2ETest || isStaticFile) {
     return NextResponse.next();
   }
 

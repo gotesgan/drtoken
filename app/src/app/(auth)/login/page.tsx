@@ -39,7 +39,7 @@ function LoginForm() {
       return;
     }
 
-    router.push(redirectParam || "/");
+    router.push(redirectParam || "/app");
     router.refresh();
   };
 

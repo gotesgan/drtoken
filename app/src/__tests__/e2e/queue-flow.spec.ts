@@ -7,7 +7,7 @@ test.describe("Staff Queue Page", () => {
     await context.addCookies([
       { name: "e2e_test", value: "1", domain: "localhost", path: "/" },
     ]);
-    await page.goto("/");
+    await page.goto("/app");
     await page.waitForResponse((res) =>
       res.url().includes("/api/clinics") && res.status() === 200,
     );

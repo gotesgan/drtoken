@@ -19,7 +19,7 @@ interface QueueEntry {
 }
 
 const NAV_ITEMS = [
-  { label: "Staff", href: "/", icon: Users },
+  { label: "Staff", href: "/app", icon: Users },
   { label: "Display", href: "/display", icon: Monitor },
   { label: "History", href: "/history", icon: CalendarDays },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -86,6 +86,7 @@ export function Sidebar() {
   }, [selectedClinicId, fetchServing]);
 
   function isActive(href: string): boolean {
+    if (href === "/app") return pathname === "/app" || pathname.startsWith("/app/");
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
@@ -156,17 +157,6 @@ export function Sidebar() {
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Logout */}
-        <div className="border-t border-hairline px-3 py-4">
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-body hover:text-ink hover:bg-canvas-soft/60 transition-colors"
-          >
-            <LogOut className="size-4" aria-hidden="true" />
-            Logout
-          </button>
-        </div>
 
         {/* Footer spacer */}
         <div className="px-4 py-4" />

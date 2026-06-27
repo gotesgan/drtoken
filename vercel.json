@@ -1,0 +1,7 @@
+{
+  "git": {
+    "framework": "nextjs"
+  },
+  "buildCommand": "cd ../app && npm run build",
+  "outputDirectory": "../app/.next"
+}

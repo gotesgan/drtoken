@@ -13,11 +13,19 @@ export default function RegisterPage() {
 
   const [step, setStep] = useState<"account" | "clinic">("account");
 
+  const [inviteClinicId, setInviteClinicId] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<string>("receptionist");
+
   useEffect(() => {
     const timer = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("step") === "clinic") {
         setStep("clinic");
+      }
+      const cid = params.get("clinic_id");
+      if (cid) {
+        setInviteClinicId(cid);
+        setInviteRole(params.get("role") || "receptionist");
       }
     }, 0);
     return () => clearTimeout(timer);
@@ -62,9 +70,24 @@ export default function RegisterPage() {
       return;
     }
 
-    // Store user ID for step 2
     if (data.user) {
       setNewUserId(data.user.id);
+
+      // Invite mode: assign user directly to the clinic
+      if (inviteClinicId) {
+        await supabase
+          .from("profiles")
+          .update({
+            clinic_id: inviteClinicId,
+            role: inviteRole,
+            display_name: displayName.trim() || email.split("@")[0],
+          })
+          .eq("id", data.user.id);
+
+        router.push("/login?msg=Account created. Sign in to continue.");
+        setLoading(false);
+        return;
+      }
     }
 
     setStep("clinic");
@@ -119,7 +142,7 @@ export default function RegisterPage() {
         throw new Error(errData.error || "Failed to create settings");
       }
 
-      router.push("/");
+      router.push("/app");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during setup");

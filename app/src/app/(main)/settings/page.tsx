@@ -214,6 +214,12 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changingPermission, setChangingPermission] = useState<string | null>(null);
+  const [newStaffName, setNewStaffName] = useState("");
+  const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState("receptionist");
+  const [newStaffPerms, setNewStaffPerms] = useState<Record<string, boolean>>({});
+  const [addingUser, setAddingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState<string | null>(null);
   const { user } = useSession();
   const fetchedRef = useRef(false);
 
@@ -270,6 +276,43 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
     },
     [selectedClinicId, fetchUsers],
   );
+
+  const handleAddUser = async () => {
+    if (!newStaffEmail) return;
+    setAddingUser(true);
+    setAddUserError(null);
+
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newStaffEmail,
+          password: Math.random().toString(36).slice(-10),
+          displayName: newStaffName.trim() || newStaffEmail.split("@")[0],
+          clinicName: "temp",
+          newStaffName: newStaffName.trim(),
+          newStaffRole,
+          newStaffPerms,
+          clinicId: selectedClinicId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to create user");
+      }
+
+      setNewStaffName("");
+      setNewStaffEmail("");
+      setNewStaffPerms({});
+      fetchUsers();
+    } catch (err) {
+      setAddUserError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setAddingUser(false);
+    }
+  };
 
   return (
     <SectionCard title="Users" icon={UserCog}>
@@ -366,6 +409,63 @@ function UsersSection({ selectedClinicId }: { selectedClinicId: string }) {
           })}
         </div>
       )}
+
+      {/* Add User Form */}
+      <div className="mt-6 border-t border-hairline pt-4">
+        <p className="text-sm font-medium text-ink">Add Staff Member</p>
+        <p className="mt-0.5 text-xs text-body">Create an account and assign permissions.</p>
+
+        <div className="mt-3 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-canvas h-9 px-3 text-sm text-ink outline-none focus:border-link transition-colors" placeholder="Dr. Jane Doe" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+              <input type="email" value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-canvas h-9 px-3 text-sm text-ink outline-none focus:border-link transition-colors" placeholder="jane@clinic.com" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Role *</label>
+            <select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-canvas h-9 px-3 text-sm text-ink outline-none">
+              <option value="doctor">Doctor</option>
+              <option value="receptionist">Receptionist</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          {/* Permission toggles */}
+          <div>
+            <p className="text-xs font-medium text-gray-700 mb-2">Permissions</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PERMISSION_DEFS.map((p) => (
+                <label key={p.dbKey} className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={newStaffPerms[p.dbKey] ?? false}
+                    onChange={(e) => setNewStaffPerms({ ...newStaffPerms, [p.dbKey]: e.target.checked })}
+                    className="size-4 accent-ink rounded" />
+                  <span className="text-xs text-ink">{p.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {addUserError && (
+            <p className="text-sm text-red-600" role="alert">{addUserError}</p>
+          )}
+
+          <div className="flex gap-2">
+            <button type="button" onClick={handleAddUser} disabled={!newStaffEmail || addingUser}
+              className="h-9 rounded-lg bg-ink px-4 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
+              {addingUser ? "Creating..." : "Send Invite"}
+            </button>
+          </div>
+        </div>
+      </div>
     </SectionCard>
   );
 }

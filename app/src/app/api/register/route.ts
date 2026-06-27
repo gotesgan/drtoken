@@ -3,58 +3,49 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const { email, password, displayName, clinicName, clinicAddress, clinicPhone } = await request.json();
+    const { email, password, displayName, clinicId, newStaffRole, newStaffPerms, newStaffName } = await request.json();
 
-    if (!email || !password || !clinicName) {
+    if (!email || !clinicId) {
       return NextResponse.json(
-        { error: "email, password, and clinicName are required" },
+        { error: "email and clinicId are required" },
         { status: 400 },
       );
     }
 
-    // 1. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // 1. Create the auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password,
-      email_confirm: true,
-      user_metadata: { display_name: displayName || email.split("@")[0] },
+      password: password || Math.random().toString(36).slice(-10),
+      options: {
+        data: { display_name: newStaffName || displayName || email.split("@")[0] },
+      },
     });
 
     if (authError) throw authError;
     if (!authData.user) throw new Error("Failed to create user");
 
-    // 2. Create clinic
-    const { data: clinic, error: clinicError } = await supabase
-      .from("clinics")
-      .insert({
-        name: clinicName.trim(),
-        address: clinicAddress?.trim() || null,
-        phone: clinicPhone?.trim() || null,
-      })
-      .select("*")
-      .single();
+    // 2. Update profile with clinic and role
+    const updates: Record<string, unknown> = {
+      clinic_id: clinicId,
+      role: newStaffRole || "receptionist",
+      display_name: newStaffName || displayName || email.split("@")[0],
+    };
 
-    if (clinicError) throw clinicError;
+    // Add permission overrides
+    if (newStaffPerms) {
+      Object.entries(newStaffPerms).forEach(([key, val]) => {
+        (updates as Record<string, string | boolean | null>)[key] = val as string | boolean | null;
+      });
+    }
 
-    // 3. Update profile with clinic_id and admin role
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({
-        clinic_id: clinic.id,
-        role: "admin",
-        display_name: displayName?.trim() || email.split("@")[0],
-      })
+      .update(updates)
       .eq("id", authData.user.id);
 
     if (profileError) throw profileError;
 
-    // 4. Create default settings
-    await supabase
-      .from("clinic_settings")
-      .insert({ clinic_id: clinic.id })
-      .maybeSingle();
-
-    return NextResponse.json({ success: true, user: authData.user, clinic });
+    return NextResponse.json({ success: true, user: authData.user });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
