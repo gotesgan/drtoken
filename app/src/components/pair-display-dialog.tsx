@@ -20,6 +20,7 @@ import {
   ScanLine,
   Keyboard,
   CameraOff,
+  RefreshCw,
 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
@@ -46,8 +47,7 @@ export function PairDisplayDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [cameraAvailable, setCameraAvailable] = useState<boolean | null>(null);
-  const [scanning, setScanning] = useState(false);
+  const [cameraState, setCameraState] = useState<"idle" | "scanning" | "denied" | "unavailable">("idle");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const prevOpenRef = useRef(open);
 
@@ -59,7 +59,7 @@ export function PairDisplayDialog({
       setPairMethod("scan");
       setSuccess(false);
       setErrorMessage(null);
-      setCameraAvailable(null);
+      setCameraState("idle");
     }
     prevOpenRef.current = open;
   }, [open]);
@@ -76,12 +76,10 @@ export function PairDisplayDialog({
       }
       scannerRef.current = null;
     }
-    setScanning(false);
   }, []);
 
   useEffect(() => {
     if (!open || success) return;
-
     if (pairMethod !== "scan") return;
 
     let cancelled = false;
@@ -91,8 +89,7 @@ export function PairDisplayDialog({
       try {
         const scanner = new Html5Qrcode(QR_SCANNER_ID);
         scannerRef.current = scanner;
-        if (mounted) setCameraAvailable(true);
-        if (mounted) setScanning(true);
+        if (mounted) setCameraState("scanning");
 
         await scanner.start(
           { facingMode: "environment" },
@@ -103,7 +100,7 @@ export function PairDisplayDialog({
               try { await scannerRef.current.stop(); await scannerRef.current.clear(); } catch {}
               scannerRef.current = null;
             }
-            if (mounted) setScanning(false);
+            if (mounted) setCameraState("idle");
 
             try {
               const url = new URL(decodedText);
@@ -143,11 +140,14 @@ export function PairDisplayDialog({
             // Scan failure — ignore (keeps scanning)
           },
         );
-      } catch {
+      } catch (err) {
         if (!cancelled && mounted) {
-          setCameraAvailable(false);
-          setScanning(false);
-          setPairMethod("code");
+          if (err instanceof DOMException && err.name === "NotAllowedError") {
+            setCameraState("denied");
+          } else {
+            setCameraState("unavailable");
+            setPairMethod("code");
+          }
         }
       }
     };
@@ -163,6 +163,12 @@ export function PairDisplayDialog({
       }
     };
   }, [open, pairMethod, success, onOpenChange]);
+
+  const handleRetryCamera = useCallback(() => {
+    setCameraState("idle");
+    setErrorMessage(null);
+    setPairMethod("scan");
+  }, []);
 
   /* ── Manual code pairing ────────────────────────────────────────────── */
 
@@ -236,12 +242,13 @@ export function PairDisplayDialog({
             ) : (
               <div className="flex flex-col gap-5">
                 {/* Method toggle */}
-                {cameraAvailable !== false && (
+                {cameraState !== "unavailable" && (
                   <div className="flex items-center gap-2 rounded-lg border border-hairline bg-canvas-soft/50 p-1">
                     <button
                       type="button"
                       onClick={() => {
                         stopScanner();
+                        setCameraState("idle");
                         setPairMethod("scan");
                         setErrorMessage(null);
                       }}
@@ -274,19 +281,57 @@ export function PairDisplayDialog({
                 )}
 
                 {/* QR Scanner */}
-                {pairMethod === "scan" && (
+                {pairMethod === "scan" && cameraState === "scanning" && (
                   <div className="flex flex-col items-center gap-3">
                     <div
                       id={QR_SCANNER_ID}
                       className="w-full max-w-xs overflow-hidden rounded-lg border border-hairline bg-black"
                       style={{ aspectRatio: "1 / 1" }}
                     />
-                    {scanning && (
-                      <p className="flex items-center gap-2 text-xs text-mute">
-                        <span className="inline-block size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Waiting for QR code…
+                    <p className="flex items-center gap-2 text-xs text-mute">
+                      <span className="inline-block size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Waiting for QR code…
+                    </p>
+                  </div>
+                )}
+
+                {/* Camera permission denied */}
+                {pairMethod === "scan" && cameraState === "denied" && (
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <div className="rounded-full bg-amber-50 p-3">
+                      <CameraOff className="size-6 text-amber-600" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-ink">
+                        Camera permission denied
                       </p>
-                    )}
+                      <p className="mt-1 text-xs text-body max-w-xs">
+                        Allow camera access in your browser settings, then try again.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={handleRetryCamera}
+                      >
+                        <RefreshCw className="size-3.5 mr-1" />
+                        Try Again
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={() => {
+                          setPairMethod("code");
+                          setErrorMessage(null);
+                        }}
+                      >
+                        <Keyboard className="size-3.5 mr-1" />
+                        Enter Code Instead
+                      </Button>
+                    </div>
                   </div>
                 )}
 
@@ -312,10 +357,23 @@ export function PairDisplayDialog({
                       className="h-14 w-full rounded-lg border border-hairline bg-canvas-soft text-center font-mono text-3xl font-bold tracking-[0.2em] text-ink placeholder:text-mute/40 focus:border-link focus:shadow-level-2 outline-none transition-shadow"
                       aria-label="4-digit pairing code"
                     />
-                    {cameraAvailable === false && (
+                    {cameraState === "unavailable" && (
                       <p className="flex items-center gap-1.5 text-xs text-body">
                         <CameraOff className="size-3.5" aria-hidden="true" />
                         Camera not available — enter the code manually
+                      </p>
+                    )}
+                    {cameraState === "denied" && (
+                      <p className="flex items-center gap-1.5 text-xs text-body">
+                        <CameraOff className="size-3.5" aria-hidden="true" />
+                        Camera blocked —{" "}
+                        <button
+                          type="button"
+                          onClick={handleRetryCamera}
+                          className="underline hover:text-ink transition-colors"
+                        >
+                          try again
+                        </button>
                       </p>
                     )}
                   </div>
