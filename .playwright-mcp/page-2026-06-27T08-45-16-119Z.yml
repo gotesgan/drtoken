@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Dr. Token System" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - navigation "Main navigation" [ref=e5]:
+        - link "Staff" [ref=e6] [cursor=pointer]:
+          - /url: /
+        - link "Track" [ref=e7] [cursor=pointer]:
+          - /url: /track
+        - link "Display" [ref=e8] [cursor=pointer]:
+          - /url: /device
+        - link "History" [ref=e9] [cursor=pointer]:
+          - /url: /history
+  - generic [ref=e11]:
+    - status "Loading" [ref=e12]
+    - paragraph [ref=e14]: Loading clinics…
+  - contentinfo [ref=e15]:
+    - generic [ref=e16]:
+      - paragraph [ref=e17]: Dr. Token System © 2026
+      - paragraph [ref=e18]: Hospital Queue Management
+  - button "Open Next.js Dev Tools" [ref=e24] [cursor=pointer]:
+    - img [ref=e25]

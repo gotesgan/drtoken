@@ -1,0 +1,28 @@
+export const tokens = {
+  colors: {
+    ink: "#171717",
+    body: "#4d4d4d",
+    mute: "#888888",
+    hairline: "#ebebeb",
+    canvas: "#ffffff",
+    canvasSoft: "#fafafa",
+    canvasSoft2: "#f5f5f5",
+    link: "#0070f3",
+    success: "#0070f3",
+    error: "#ee0000",
+    warning: "#f5a623",
+  },
+  spacing: {
+    xxs: 4,
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    "2xl": 40,
+    "3xl": 48,
+    "4xl": 64,
+    "5xl": 96,
+    "6xl": 128,
+  },
+} as const;
