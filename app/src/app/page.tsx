@@ -20,7 +20,6 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Dr. Token System" className="h-9 w-auto" />
-            <span className="text-lg font-bold text-gray-900 tracking-tight">Dr. Token System</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>

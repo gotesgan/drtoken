@@ -160,7 +160,6 @@ export default function RegisterPage() {
         <div className="relative z-10 text-center max-w-md animate-fade-in">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="Dr. Token System"           className="mx-auto mb-6 w-40 h-auto object-contain drop-shadow-lg" />
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dr. Token System</h1>
           <p className="mt-3 text-base text-gray-400 leading-relaxed">
             Set up your clinic in minutes. Create your admin account and start managing your queue.
           </p>

@@ -15,7 +15,7 @@ test.describe("Staff Queue Page", () => {
   });
 
   test("loads and shows clinic selector", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Dr. Token System" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Dr\. Token System/i }).first()).toBeVisible();
     await expect(page.getByRole("combobox")).toBeVisible();
   });
 

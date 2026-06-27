@@ -86,7 +86,7 @@ export default function TokenPage() {
     <div className="flex min-h-dvh flex-col bg-gradient-to-b from-gray-50 to-white">
       {/* Minimal header */}
       <div className="border-b border-gray-200 bg-white px-4 py-3 text-center">
-        <h1 className="text-sm font-semibold text-gray-900">Dr. Token System</h1>
+        <img src="/logo.png" alt="Dr. Token System" className="mx-auto h-7 w-auto" />
       </div>
 
       {/* Main content */}

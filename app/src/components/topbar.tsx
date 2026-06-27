@@ -82,7 +82,9 @@ export function TopBar() {
           <button type="button" className="md:hidden flex size-8 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors" aria-label="Toggle navigation menu">
             <Menu className="size-5" />
           </button>
-          <Link href="/app" className="text-sm font-semibold text-white tracking-tight">Dr. Token System</Link>
+          <Link href="/app" className="flex items-center gap-2">
+            <img src="/logo.png" alt="Dr. Token System" className="h-7 w-auto brightness-0 invert" />
+          </Link>
         </div>
 
         {/* ── Center: Search ── */}

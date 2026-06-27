@@ -85,66 +85,80 @@ export function PairDisplayDialog({
     let cancelled = false;
     let mounted = true;
 
-    const startScanner = async () => {
-      try {
-        const scanner = new Html5Qrcode(QR_SCANNER_ID);
-        scannerRef.current = scanner;
-        if (mounted) setCameraState("scanning");
+    const tryStart = async (facingMode: "environment" | "user") => {
+      const scanner = new Html5Qrcode(QR_SCANNER_ID);
+      scannerRef.current = scanner;
+      if (mounted) setCameraState("scanning");
 
-        await scanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          async (decodedText) => {
-            if (cancelled) return;
-            if (scannerRef.current) {
-              try { await scannerRef.current.stop(); await scannerRef.current.clear(); } catch {}
-              scannerRef.current = null;
-            }
-            if (mounted) setCameraState("idle");
+      await scanner.start(
+        { facingMode },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText) => {
+          if (cancelled) return;
+          if (scannerRef.current === scanner) {
+            try { await scanner.stop(); await scanner.clear(); } catch {}
+            scannerRef.current = null;
+          }
+          if (mounted) setCameraState("idle");
 
-            try {
-              const url = new URL(decodedText);
-              const sid = url.searchParams.get("session_id");
-              if (sid) {
-                if (mounted) setIsSubmitting(true);
-                if (mounted) setErrorMessage(null);
+          try {
+            const url = new URL(decodedText);
+            const sid = url.searchParams.get("session_id");
+            if (sid) {
+              if (mounted) setIsSubmitting(true);
+              if (mounted) setErrorMessage(null);
 
-                const res = await fetch("/api/display/pair", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ session_id: sid }),
-                });
+              const res = await fetch("/api/display/pair", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ session_id: sid }),
+              });
 
-                const data = await res.json();
+              const data = await res.json();
 
-                if (!res.ok) {
-                  throw new Error(data.error || "Failed to pair display");
-                }
-
-                if (!cancelled && mounted) {
-                  setSuccess(true);
-                  setTimeout(() => onOpenChange(false), 2000);
-                }
+              if (!res.ok) {
+                throw new Error(data.error || "Failed to pair display");
               }
-            } catch (err) {
+
               if (!cancelled && mounted) {
-                setErrorMessage(
-                  err instanceof Error ? err.message : "Failed to pair display",
-                );
+                setSuccess(true);
+                setTimeout(() => onOpenChange(false), 2000);
               }
-            } finally {
-              if (!cancelled && mounted) setIsSubmitting(false);
             }
-          },
-          () => {
-            // Scan failure — ignore (keeps scanning)
-          },
-        );
+          } catch (err) {
+            if (!cancelled && mounted) {
+              setErrorMessage(
+                err instanceof Error ? err.message : "Failed to pair display",
+              );
+            }
+          } finally {
+            if (!cancelled && mounted) setIsSubmitting(false);
+          }
+        },
+        () => {
+          // Scan failure — ignore (keeps scanning)
+        },
+      );
+    };
+
+    const startScanner = async () => {
+      if (cancelled || !mounted) return;
+
+      try {
+        await tryStart("environment");
       } catch (err) {
-        if (!cancelled && mounted) {
-          if (err instanceof DOMException && err.name === "NotAllowedError") {
-            setCameraState("denied");
-          } else {
+        if (cancelled || !mounted) return;
+
+        if (err instanceof DOMException && err.name === "NotAllowedError") {
+          if (mounted) setCameraState("denied");
+          return;
+        }
+
+        // environment camera failed — try front camera
+        try {
+          await tryStart("user");
+        } catch {
+          if (!cancelled && mounted) {
             setCameraState("unavailable");
             setPairMethod("code");
           }

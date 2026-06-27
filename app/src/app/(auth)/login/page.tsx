@@ -58,9 +58,6 @@ function LoginForm() {
             alt="Dr. Token System"
             className="mx-auto mb-6 w-40 h-auto object-contain drop-shadow-lg"
           />
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Dr. Token System
-          </h1>
           <p className="mt-3 text-base text-gray-400 leading-relaxed">
             Streamline your hospital queue management. Add patients, call tokens,
             and serve faster — all from one dashboard.
@@ -104,7 +101,6 @@ function LoginForm() {
               alt="Dr. Token System"
               className="mx-auto mb-3 w-24 h-auto object-contain"
             />
-            <h1 className="text-xl font-semibold text-gray-900">Dr. Token System</h1>
             <p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
           </div>
 
@@ -208,7 +204,7 @@ function LoginForm() {
           </p>
 
           <p className="mt-8 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} Dr. Token System.
+            &copy; {new Date().getFullYear()} Dr. Token System. All rights reserved.
           </p>
         </div>
       </div>
