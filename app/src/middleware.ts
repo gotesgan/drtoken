@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const publicPaths = ["/login", "/register", "/auth/callback", "/forgot-password", "/reset-password"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
   const isLanding = pathname === "/";
-  const isKiosk = pathname.startsWith("/token") || pathname.startsWith("/track");
+  const isKiosk = pathname.startsWith("/token") || pathname.startsWith("/track") || pathname.startsWith("/display");
   const isApi = pathname.startsWith("/api");
 
   const isStaticFile = /\.(png|jpg|jpeg|gif|svg|ico|webp|css|js|woff2?)$/i.test(pathname);
