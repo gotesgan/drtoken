@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Create the auth user
+    // 1. Create the auth user with a random password (placeholder)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password: password || Math.random().toString(36).slice(-10),
@@ -44,6 +44,13 @@ export async function POST(request: Request) {
       .eq("id", authData.user.id);
 
     if (profileError) throw profileError;
+
+    // 3. Send invite email (password reset link) so the staff can set their own password
+    const { error: inviteError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${new URL(request.url).origin}/reset-password`,
+    });
+
+    if (inviteError) throw inviteError;
 
     return NextResponse.json({ success: true, user: authData.user });
   } catch (error) {
