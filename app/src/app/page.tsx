@@ -60,6 +60,15 @@ export default function LandingPage() {
           </div>
 
           <p className="mt-4 text-xs text-gray-400">Free for 1 clinic • No setup fees • Cancel anytime</p>
+
+          <div className="mx-auto mt-16 max-w-5xl rounded-2xl border border-gray-200 overflow-hidden shadow-xl bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/demo/app-dashboard.png"
+              alt="Dr. Token System Dashboard"
+              className="w-full"
+            />
+          </div>
         </div>
       </section>
 
@@ -167,9 +176,9 @@ export default function LandingPage() {
 
           <div className="mx-auto mt-12 max-w-5xl space-y-12">
             {[
-              { title: "Staff Queue Dashboard", desc: "Add patients, call next, skip, or complete — all from one screen. Real-time updates, search, and filters.", img: "staff" },
-              { title: "Waiting Room Display", desc: "Big-screen view showing Now Serving and next waiting tokens. Auto-refreshes 24/7.", img: "display" },
-              { title: "Patient Token Lookup", desc: "Patients enter their phone number and see their exact position in the queue.", img: "token" },
+              { title: "Staff Queue Dashboard", desc: "Add patients, call next, skip, or complete — all from one screen. Real-time updates, search, and filters.", img: "app-dashboard" },
+              { title: "Waiting Room Display", desc: "Big-screen view showing Now Serving and next waiting tokens. Auto-refreshes 24/7.", img: "tv-display" },
+              { title: "Patient Token Lookup", desc: "Patients enter their phone number and see their exact position in the queue.", img: "token-lookup" },
               { title: "Queue History & Reports", desc: "Browse any day's data. Useful for audits, patient volume analysis, and reporting.", img: "history" },
             ].map((s, i) => (
               <div key={s.title} className={`flex flex-col ${i % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} gap-8 items-center`}>
@@ -178,13 +187,13 @@ export default function LandingPage() {
                   <p className="mt-2 text-gray-500 leading-relaxed">{s.desc}</p>
                 </div>
                 <div className="flex-1 w-full">
-                  <div className="aspect-video rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                    <div className="text-center p-8">
-                      <svg className="mx-auto size-8 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                      </svg>
-                      <p className="text-xs text-gray-400">Screenshot: {s.img} view</p>
-                    </div>
+                  <div className="aspect-video rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/demo/${s.img}.png`}
+                      alt={s.title}
+                      className="size-full object-cover object-top"
+                    />
                   </div>
                 </div>
               </div>
