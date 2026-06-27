@@ -39,12 +39,12 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // ── Check for an active session ─────────────────────────────────
+  // ── Check for an active user (getUser is more reliable than getSession) ─
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -54,8 +54,8 @@ export async function middleware(request: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, clinic_id, display_name")
-    .eq("id", session.user.id)
-    .single();
+    .eq("id", user.id)
+    .maybeSingle();
 
   if (!profile) {
     // User exists in auth but has no profile yet — sign them out
@@ -72,7 +72,7 @@ export async function middleware(request: NextRequest) {
 
   // ── Store user info in request headers for server components ────
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-user-id", session.user.id);
+  requestHeaders.set("x-user-id", user.id);
   requestHeaders.set("x-user-role", profile.role);
   requestHeaders.set("x-user-clinic", profile.clinic_id);
   requestHeaders.set("x-user-name", profile.display_name ?? "");
