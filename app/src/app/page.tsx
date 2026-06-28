@@ -315,7 +315,7 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:text-gray-600 transition-colors"
             >
-              Security and Infrastructure
+              Infrastructure powered by
               <img
                 src="https://media.pixelperfects.in/pixelperfect03.png"
                 alt="PixelPerfect"
