@@ -321,7 +321,7 @@ export default function LandingPage() {
                 alt="PixelPerfect"
                 className="h-4 w-auto inline-block"
               />
-              pixelperfects.in
+              PixelPerfects
             </a>
           </div>
         </div>

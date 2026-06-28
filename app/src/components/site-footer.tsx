@@ -15,10 +15,10 @@ export function SiteFooter() {
           <img
             src="https://media.pixelperfects.in/pixelperfect03.png"
             alt="PixelPerfect"
-              className="h-4 w-auto inline-block"
-            />
-            pixelperfects.in
-          </a>
+            className="h-4 w-auto inline-block"
+          />
+          PixelPerfects
+        </a>
       </div>
     </footer>
   );
