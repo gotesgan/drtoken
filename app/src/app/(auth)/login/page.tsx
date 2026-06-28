@@ -217,6 +217,7 @@ function LoginForm() {
                 alt="PixelPerfect"
                 className="h-4 w-auto inline-block"
               />
+              pixelperfects.in
             </a>
           </div>
         </div>
