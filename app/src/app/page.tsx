@@ -56,6 +56,9 @@ export default function LandingPage() {
             <Link href="https://youtu.be/6RVCucj8b-8" className="rounded-xl border border-gray-200 bg-white px-8 py-3.5 text-base font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
               Watch Demo →
             </Link>
+            <Link href="https://cal.com/shantanu-gote-zmu6xf/book-demo-for-dr-token" className="rounded-xl border border-blue-200 bg-blue-50 px-8 py-3.5 text-base font-semibold text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all">
+              Book a Demo →
+            </Link>
           </div>
 
           <p className="mt-4 text-xs text-gray-400">Free for 1 clinic • No setup fees • Cancel anytime</p>
