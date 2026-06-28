@@ -53,7 +53,7 @@ export default function LandingPage() {
             <Link href="/register" className="rounded-xl bg-gray-900 px-8 py-3.5 text-base font-semibold text-white shadow-lg hover:bg-gray-800 hover:shadow-xl transition-all">
               Start Free — No Credit Card
             </Link>
-            <Link href="/login" className="rounded-xl border border-gray-200 bg-white px-8 py-3.5 text-base font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
+            <Link href="https://youtu.be/6RVCucj8b-8" className="rounded-xl border border-gray-200 bg-white px-8 py-3.5 text-base font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
               Watch Demo →
             </Link>
           </div>
