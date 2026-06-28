@@ -2,6 +2,7 @@
 
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
+import { SiteFooter } from "@/components/site-footer";
 import { SearchProvider } from "@/lib/search-context";
 import { ClinicProvider } from "@/lib/clinic-context";
 import { SessionProvider } from "@/lib/session-context";
@@ -20,6 +21,7 @@ export default function MainLayout({
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0 md:pl-56 pb-14 md:pb-0">
             <main className="flex-1">{children}</main>
+            <SiteFooter />
           </div>
         </div>
         </SessionProvider>
