@@ -2,12 +2,22 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-hairline bg-canvas">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-        <p className="text-sm text-body">
-          <img src="/logo.png" alt="Dr. Token System" className="h-5 w-auto inline-block" /> &copy; 2026
+        <p className="text-xs text-body">
+          &copy; 2026 Dr. Token System. All rights reserved.
         </p>
-        <p className="text-xs text-mute">
-          Hospital Queue Management
-        </p>
+        <a
+          href="https://pixelperfects.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs text-mute hover:text-ink transition-colors"
+        >
+          Powered by
+          <img
+            src="https://media.pixelperfects.in/pixelperfect03.png"
+            alt="PixelPerfect"
+            className="h-4 w-auto inline-block"
+          />
+        </a>
       </div>
     </footer>
   );

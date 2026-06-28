@@ -307,8 +307,21 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="mt-10 border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} Dr. Token System. All rights reserved.
+          <div className="mt-10 border-t border-gray-100 pt-6 flex items-center justify-between text-xs text-gray-400">
+            <p>&copy; {new Date().getFullYear()} Dr. Token System. All rights reserved.</p>
+            <a
+              href="https://pixelperfects.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-gray-600 transition-colors"
+            >
+              Powered by
+              <img
+                src="https://media.pixelperfects.in/pixelperfect03.png"
+                alt="PixelPerfect"
+                className="h-4 w-auto inline-block"
+              />
+            </a>
           </div>
         </div>
       </footer>
