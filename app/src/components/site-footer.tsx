@@ -11,7 +11,7 @@ export function SiteFooter() {
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-xs text-mute hover:text-ink transition-colors"
         >
-          Powered by
+          Security and Infrastructure
           <img
             src="https://media.pixelperfects.in/pixelperfect03.png"
             alt="PixelPerfect"

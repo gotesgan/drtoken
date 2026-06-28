@@ -211,7 +211,7 @@ function LoginForm() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:text-gray-600 transition-colors"
             >
-              Powered by
+              Security and Infrastructure
               <img
                 src="https://media.pixelperfects.in/pixelperfect03.png"
                 alt="PixelPerfect"
