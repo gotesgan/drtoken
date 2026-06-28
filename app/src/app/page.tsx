@@ -261,11 +261,11 @@ export default function LandingPage() {
             Ready to digitize your clinic queue?
           </h2>
           <p className="mt-4 text-lg text-gray-400">
-            Join clinics using Dr. Token System to manage patient queues. Free to start.
+            Join clinics using Dr. Token System to manage patient queues. See it in action.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-gray-900 shadow-lg hover:bg-gray-100 transition-all">
-              Start Free — No Credit Card
+            <Link href="https://cal.com/shantanu-gote-zmu6xf/book-demo-for-dr-token" className="rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-gray-900 shadow-lg hover:bg-gray-100 transition-all">
+              Book a Demo
             </Link>
             <Link href="/login" className="rounded-xl border border-gray-600 px-8 py-3.5 text-base font-semibold text-gray-300 hover:bg-white/5 transition-all">
               Sign In
