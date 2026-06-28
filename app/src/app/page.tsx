@@ -21,8 +21,9 @@ export default function LandingPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Dr. Token System" className="h-9 w-auto" />
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
+            <Link href="https://cal.com/shantanu-gote-zmu6xf/book-demo-for-dr-token" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">Book a Demo</Link>
             <Link href="/register" className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-all">Start Free</Link>
           </div>
         </div>
@@ -55,9 +56,6 @@ export default function LandingPage() {
             </Link>
             <Link href="https://youtu.be/6RVCucj8b-8" className="rounded-xl border border-gray-200 bg-white px-8 py-3.5 text-base font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
               Watch Demo →
-            </Link>
-            <Link href="https://cal.com/shantanu-gote-zmu6xf/book-demo-for-dr-token" className="rounded-xl border border-blue-200 bg-blue-50 px-8 py-3.5 text-base font-semibold text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all">
-              Book a Demo →
             </Link>
           </div>
 
